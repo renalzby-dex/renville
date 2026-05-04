@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RENVILLEX — AI • Cyber • Trading Systems</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --black:#050505;--dark:#0f0f0f;--dark2:#141414;--dark3:#1a1a1a;
+  --neon:#00ff88;--neon-dim:rgba(0,255,136,0.15);--neon-mid:rgba(0,255,136,0.4);
+  --cyan:#00d4ff;--red:#ff3355;--red-dim:rgba(255,51,85,0.15);
+  --white:#e8e8e8;--gray:#666;--gray-light:#999;
+  --glass:rgba(15,15,15,0.7);--glass-border:rgba(0,255,136,0.1);
+  --radius:12px;--radius-sm:8px;--radius-lg:16px;
+  --font-orb:'Orbitron',monospace;--font-inter:'Inter',sans-serif;--font-mono:'Share Tech Mono',monospace;
+}
+html{scroll-behavior:smooth;cursor:none}
+body{background:var(--black);color:var(--white);font-family:var(--font-inter);overflow-x:hidden;line-height:1.6}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--black)}
+::-webkit-scrollbar-thumb{background:var(--neon-dim);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--neon-mid)}
+::selection{background:var(--neon);color:var(--black)}
+
+/* Custom Cursor */
+.cursor-dot{width:6px;height:6px;background:var(--neon);border-radius:50%;position:fixed;pointer-events:none;z-index:99999;transition:transform .1s}
+.cursor-ring{width:36px;height:36px;border:1px solid var(--neon-mid);border-radius:50%;position:fixed;pointer-events:none;z-index:99998;transition:all .15s ease-out;transform:translate(-50%,-50%)}
+.cursor-ring.hover{width:50px;height:50px;border-color:var(--neon);background:var(--neon-dim)}
+
+/* Matrix Rain Canvas */
+#matrixCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.06;pointer-events:none}
+
+/* Scanline Overlay */
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,0.008) 2px,rgba(0,255,136,0.008) 4px)}
+
+/* Particles Canvas */
+#particlesCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.4}
+
+/* Main Content */
+.content-wrapper{position:relative;z-index:2}
+
+/* ========== NAVBAR ========== */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 24px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(5,5,5,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--glass-border)}
+.nav-logo{font-family:var(--font-orb);font-weight:800;font-size:18px;letter-spacing:3px;color:var(--neon);
+  text-shadow:0 0 20px rgba(0,255,136,0.3)}
+.nav-logo span{color:var(--white);font-weight:500}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-link{font-family:var(--font-mono);font-size:12px;letter-spacing:1px;color:var(--gray-light);
+  padding:8px 16px;border-radius:var(--radius-sm);transition:all .3s;text-decoration:none;text-transform:uppercase;position:relative}
+.nav-link:hover,.nav-link.active{color:var(--neon);background:var(--neon-dim)}
+.nav-link.active::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:16px;height:2px;background:var(--neon);border-radius:1px}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-search{display:flex;align-items:center;gap:8px;background:var(--dark);border:1px solid var(--glass-border);
+  border-radius:var(--radius-sm);padding:6px 12px;transition:all .3s}
+.nav-search input{background:transparent;border:none;outline:none;color:var(--white);font-family:var(--font-mono);
+  font-size:11px;width:120px;letter-spacing:0.5px}
+.nav-search input::placeholder{color:var(--gray)}
+.nav-search:focus-within{border-color:var(--neon-mid);box-shadow:0 0 15px rgba(0,255,136,0.05)}
+.nav-icon-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:transparent;
+  color:var(--gray-light);cursor:none;transition:all .3s}
+.nav-icon-btn:hover{color:var(--neon);border-color:var(--neon-mid);background:var(--neon-dim)}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:none;padding:4px}
+.hamburger span{display:block;width:20px;height:1.5px;background:var(--gray-light);transition:all .3s;border-radius:1px}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(4px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-5px)}
+
+/* Mobile Menu */
+.mobile-menu{position:fixed;top:64px;left:0;right:0;background:rgba(5,5,5,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--glass-border);padding:16px 24px;z-index:999;
+  transform:translateY(-100%);opacity:0;transition:all .3s;pointer-events:none}
+.mobile-menu.open{transform:translateY(0);opacity:1;pointer-events:all}
+.mobile-menu a{display:block;font-family:var(--font-mono);font-size:13px;color:var(--gray-light);
+  padding:12px 0;border-bottom:1px solid var(--glass-border);text-decoration:none;text-transform:uppercase;letter-spacing:1px;transition:all .3s}
+.mobile-menu a:hover{color:var(--neon);padding-left:8px}
+
+/* ========== HERO / TERMINAL ========== */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:100px 24px 60px;text-align:center;position:relative}
+.hero-status{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;
+  color:var(--neon);letter-spacing:2px;text-transform:uppercase;margin-bottom:24px}
+.status-dot{width:8px;height:8px;background:var(--neon);border-radius:50%;animation:pulse-dot 2s infinite;
+  box-shadow:0 0 8px var(--neon)}
+@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 8px var(--neon)}50%{opacity:0.5;box-shadow:0 0 20px var(--neon)}}
+.hero-title{font-family:var(--font-orb);font-size:clamp(28px,6vw,64px);font-weight:900;
+  letter-spacing:clamp(4px,1vw,12px);color:var(--white);margin-bottom:12px;line-height:1.1}
+.hero-title .glow{color:var(--neon);text-shadow:0 0 30px rgba(0,255,136,0.4),0 0 60px rgba(0,255,136,0.15)}
+.hero-sub{font-family:var(--font-mono);font-size:clamp(12px,1.5vw,16px);color:var(--gray-light);
+  letter-spacing:clamp(3px,0.8vw,8px);text-transform:uppercase;margin-bottom:40px}
+.hero-stats{display:flex;gap:32px;margin-bottom:40px;flex-wrap:wrap;justify-content:center}
+.hero-stat{text-align:center}
+.hero-stat-val{font-family:var(--font-orb);font-size:clamp(18px,3vw,28px);font-weight:700;color:var(--neon)}
+.hero-stat-label{font-family:var(--font-mono);font-size:10px;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.hero-buttons{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:48px}
+
+/* Terminal Box */
+.terminal-box{width:100%;max-width:700px;background:var(--dark);border:1px solid var(--glass-border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:0 0 40px rgba(0,255,136,0.03)}
+.terminal-header{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--glass-border);background:rgba(0,0,0,0.3)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.r{background:#ff5f57}.terminal-dot.y{background:#ffbd2e}.terminal-dot.g{background:#28c840}
+.terminal-title{font-family:var(--font-mono);font-size:11px;color:var(--gray);margin-left:8px;letter-spacing:1px}
+.terminal-body{padding:16px;font-family:var(--font-mono);font-size:12px;line-height:1.8;min-height:180px;color:var(--gray-light)}
+.terminal-body .line{opacity:0;animation:termLine .3s forwards}
+.terminal-body .line .cmd{color:var(--neon)}
+.terminal-body .line .val{color:var(--cyan)}
+.terminal-body .line .warn{color:var(--red)}
+.terminal-cursor{display:inline-block;width:7px;height:14px;background:var(--neon);animation:blink 1s step-end infinite;vertical-align:middle;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes termLine{to{opacity:1}}
+
+/* ========== BUTTONS ========== */
+.btn{font-family:var(--font-mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:12px 28px;border-radius:var(--radius-sm);border:none;cursor:none;transition:all .3s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;position:relative;overflow:hidden}
+.btn-primary{background:var(--neon);color:var(--black);font-weight:600}
+.btn-primary:hover{box-shadow:0 0 25px rgba(0,255,136,0.4),0 0 50px rgba(0,255,136,0.15);transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--neon);border:1px solid var(--neon-mid)}
+.btn-outline:hover{background:var(--neon-dim);border-color:var(--neon);box-shadow:0 0 20px rgba(0,255,136,0.1);transform:translateY(-2px)}
+.btn-ghost{background:transparent;color:var(--gray-light);border:1px solid var(--glass-border)}
+.btn-ghost:hover{color:var(--neon);border-color:var(--neon-mid)}
+.btn-sm{padding:8px 16px;font-size:10px}
+.btn::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,0.1);
+  border-radius:50%;transform:translate(-50%,-50%);transition:width .4s,height .4s}
+.btn:active::after{width:200px;height:200px}
+
+/* ========== SECTIONS ========== */
+.section{padding:80px 24px;max-width:1280px;margin:0 auto}
+.section-header{margin-bottom:48px}
+.section-label{font-family:var(--font-mono);font-size:10px;color:var(--neon);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
+.section-title{font-family:var(--font-orb);font-size:clamp(20px,3vw,32px);font-weight:700;letter-spacing:2px;color:var(--white)}
+.section-divider{width:60px;height:2px;background:linear-gradient(90deg,var(--neon),transparent);margin-top:16px;border-radius:1px}
+
+/* ========== CARD GRID ========== */
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--dark);border:1px solid var(--glass-border);border-radius:var(--radius);
+  padding:24px;transition:all .4s;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--neon-mid),transparent);opacity:0;transition:opacity .4s}
+.card:hover{border-color:var(--neon-mid);transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,255,136,0.06)}
+.card:hover::before{opacity:1}
+.card-icon{width:44px;height:44px;border-radius:var(--radius-sm);background:var(--neon-dim);
+  display:flex;align-items:center;justify-content:center;color:var(--neon);font-size:20px;margin-bottom:16px}
+.card-title{font-family:var(--font-orb);font-size:13px;font-weight:600;letter-spacing:1px;margin-bottom:8px;color:var(--white)}
+.card-desc{font-size:12px;color:var(--gray);line-height:1.7;margin-bottom:16px}
+.card-stats{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--glass-border)}
+.card-stat{font-family:var(--font-mono);font-size:10px;color:var(--gray)}
+.card-stat strong{color:var(--neon);font-weight:400}
+.card-badge{font-family:var(--font-mono);font-size:9px;padding:3px 8px;border-radius:4px;
+  background:var(--neon-dim);color:var(--neon);letter-spacing:1px;text-transform:uppercase}
+.card-badge.red{background:var(--red-dim);color:var(--red)}
+
+/* ========== MARKET TABLE ========== */
+.market-panel{background:var(--dark);border:1px solid var(--glass-border);border-radius:var(--radius);overflow:hidden}
+.market-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--glass-border)}
+.market-title{font-family:var(--font-orb);font-size:12px;letter-spacing:2px;color:var(--white)}
+.market-live{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--neon)}
+.market-live .dot{width:6px;height:6px;background:var(--neon);border-radius:50%;animation:pulse-dot 1.5s infinite}
+.market-table{width:100%;border-collapse:collapse}
+.market-table th{font-family:var(--font-mono);font-size:9px;color:var(--gray);letter-spacing:1.5px;
+  text-transform:uppercase;padding:12px 20px;text-align:left;border-bottom:1px solid var(--glass-border)}
+.market-table td{font-family:var(--font-mono);font-size:12px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.02)}
+.market-table tr{transition:background .2s}
+.market-table tbody tr:hover{background:rgba(0,255,136,0.02)}
+.coin-name{display:flex;align-items:center;gap:10px}
+.coin-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-orb);font-size:10px;font-weight:700}
+.coin-symbol{color:var(--white);font-weight:500}
+.coin-full{color:var(--gray);font-size:10px;margin-left:4px}
+.coin-change{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.coin-change.up{color:var(--neon);background:var(--neon-dim)}
+.coin-change.down{color:var(--red);background:var(--red-dim)}
+.mini-chart{width:80px;height:28px;display:flex;align-items:flex-end;gap:1px}
+.mini-chart .bar{flex:1;border-radius:1px 1px 0 0;transition:height .3s;min-width:2px}
+.signal-indicator{width:8px;height:8px;border-radius:50%;display:inline-block}
+.signal-indicator.bullish{background:var(--neon);box-shadow:0 0 6px var(--neon)}
+.signal-indicator.bearish{background:var(--red);box-shadow:0 0 6px var(--red)}
+
+/* ========== ANALYTICS ROW ========== */
+.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.analytics-card{background:var(--dark);border:1px solid var(--glass-border);border-radius:var(--radius);
+  padding:20px;position:relative;overflow:hidden}
+.analytics-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--neon),transparent);opacity:0;transition:opacity .3s}
+.analytics-card:hover::after{opacity:1}
+.analytics-label{font-family:var(--font-mono);font-size:10px;color:var(--gray);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.analytics-value{font-family:var(--font-orb);font-size:clamp(16px,2vw,22px);font-weight:700;color:var(--white)}
+.analytics-change{font-family:var(--font-mono);font-size:11px;margin-top:6px}
+.analytics-change.up{color:var(--neon)}
+.analytics-change.down{color:var(--red)}
+.analytics-sparkline{position:absolute;bottom:12px;right:16px;opacity:0.3}
+
+/* ========== CONTACT ========== */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.contact-info{background:var(--dark);border:1px solid var(--glass-border);border-radius:var(--radius);padding:32px}
+.contact-status{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.contact-status-dot{width:10px;height:10px;background:var(--neon);border-radius:50%;animation:pulse-dot 2s infinite;
+  box-shadow:0 0 10px var(--neon)}
+.contact-status-text{font-family:var(--font-mono);font-size:12px;color:var(--neon);letter-spacing:1px}
+.contact-title{font-family:var(--font-orb);font-size:20px;font-weight:700;letter-spacing:2px;margin-bottom:8px}
+.contact-desc{font-size:13px;color:var(--gray);line-height:1.7;margin-bottom:28px}
+.social-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.social-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius-sm);
+  background:var(--dark2);border:1px solid var(--glass-border);text-decoration:none;color:var(--gray-light);
+  transition:all .3s;cursor:none}
+.social-btn:hover{border-color:var(--neon-mid);color:var(--neon);background:var(--neon-dim);transform:translateY(-2px);
+  box-shadow:0 4px 20px rgba(0,255,136,0.08)}
+.social-btn iconify-icon{font-size:18px}
+.social-btn span{font-family:var(--font-mono);font-size:11px;letter-spacing:0.5px}
+.social-btn.wa:hover{border-color:var(--neon-mid);color:var(--neon);background:rgba(0,255,136,0.08);
+  box-shadow:0 4px 20px rgba(0,255,136,0.12)}
+.contact-form-card{background:var(--dark);border:1px solid var(--glass-border);border-radius:var(--radius);padding:32px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-family:var(--font-mono);font-size:10px;color:var(--gray);letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:8px}
+.form-input{width:100%;padding:10px 14px;background:var(--dark2);border:1px solid var(--glass-border);
+  border-radius:var(--radius-sm);color:var(--white);font-family:var(--font-mono);font-size:12px;
+  outline:none;transition:all .3s}
+.form-input:focus{border-color:var(--neon-mid);box-shadow:0 0 15px rgba(0,255,136,0.05)}
+.form-input::placeholder{color:var(--gray)}
+textarea.form-input{resize:vertical;min-height:80px}
+
+/* ========== AUDIO TOGGLE ========== */
+.audio-toggle{position:fixed;bottom:24px;right:24px;z-index:1000}
+.audio-btn{width:48px;height:48px;border-radius:50%;background:var(--dark);border:1px solid var(--glass-border);
+  color:var(--gray);cursor:none;display:flex;align-items:center;justify-content:center;transition:all .3s;
+  font-size:18px}
+.audio-btn:hover,.audio-btn.active{border-color:var(--neon-mid);color:var(--neon);background:var(--neon-dim);
+  box-shadow:0 0 20px rgba(0,255,136,0.1)}
+.audio-btn.active{animation:audio-pulse 2s infinite}
+@keyframes audio-pulse{0%,100%{box-shadow:0 0 20px rgba(0,255,136,0.1)}50%{box-shadow:0 0 30px rgba(0,255,136,0.2)}}
+.audio-label{position:absolute;bottom:56px;right:0;font-family:var(--font-mono);font-size:9px;color:var(--gray);
+  letter-spacing:1px;text-transform:uppercase;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none}
+.audio-btn:hover+.audio-label,.audio-btn.active+.audio-label{opacity:1}
+
+/* ========== FOOTER ========== */
+.footer{border-top:1px solid var(--glass-border);padding:40px 24px;text-align:center;position:relative}
+.footer::before{content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:200px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--neon),transparent)}
+.footer-text{font-family:var(--font-mono);font-size:11px;color:var(--gray);letter-spacing:2px;text-transform:uppercase}
+.footer-text span{color:var(--neon)}
+.footer-socials{display:flex;justify-content:center;gap:12px;margin-top:16px}
+.footer-social{width:36px;height:36px;border-radius:50%;border:1px solid var(--glass-border);background:transparent;
+  color:var(--gray);display:flex;align-items:center;justify-content:center;cursor:none;transition:all .3s;text-decoration:none;font-size:14px}
+.footer-social:hover{color:var(--neon);border-color:var(--neon-mid);background:var(--neon-dim);
+  box-shadow:0 0 15px rgba(0,255,136,0.1);transform:translateY(-2px)}
+
+/* ========== GLITCH TEXT ========== */
+.glitch{position:relative}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;opacity:0}
+.glitch:hover::before{animation:glitch1 .3s;color:var(--cyan);opacity:0.7}
+.glitch:hover::after{animation:glitch2 .3s;color:var(--red);opacity:0.7}
+@keyframes glitch1{0%{clip-path:inset(20% 0 60% 0);transform:translate(-3px)}50%{clip-path:inset(60% 0 10% 0);transform:translate(3px)}100%{clip-path:inset(20% 0 60% 0);transform:0}}
+@keyframes glitch2{0%{clip-path:inset(50% 0 20% 0);transform:translate(3px)}50%{clip-path:inset(10% 0 70% 0);transform:translate(-3px)}100%{clip-path:inset(50% 0 20% 0);transform:0}}
+
+/* ========== SCROLL ANIMATIONS ========== */
+.reveal{opacity:0;transform:translateY(30px);transition:all .7s cubic-bezier(0.16,1,0.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+.reveal-delay-5{transition-delay:.5s}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:1024px){
+  .card-grid{grid-template-columns:repeat(2,1fr)}
+  .analytics-grid{grid-template-columns:repeat(2,1fr)}
+  .contact-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .nav-links{display:none}
+  .nav-search{display:none}
+  .hamburger{display:flex}
+  .card-grid{grid-template-columns:1fr}
+  .analytics-grid{grid-template-columns:1fr 1fr}
+  .hero-stats{gap:20px}
+  .market-table th:nth-child(4),.market-table td:nth-child(4),
+  .market-table th:nth-child(6),.market-table td:nth-child(6){display:none}
+  .social-grid{grid-template-columns:1fr}
+  .section{padding:60px 16px}
+}
+@media(max-width:480px){
+  .analytics-grid{grid-template-columns:1fr}
+  .hero-buttons{flex-direction:column;width:100%;max-width:280px}
+  .hero-buttons .btn{justify-content:center;width:100%}
+  .market-table th:nth-child(5),.market-table td:nth-child(5){display:none}
+  html{cursor:auto}
+  .cursor-dot,.cursor-ring{display:none}
+  .btn,.nav-icon-btn,.social-btn,.footer-social,.audio-btn{cursor:pointer}
+}
+
+/* Hologram shimmer */
+.hologram{position:relative;overflow:hidden}
+.hologram::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:linear-gradient(45deg,transparent 40%,rgba(0,255,136,0.03) 50%,transparent 60%);
+  animation:hologram-sweep 6s ease-in-out infinite;pointer-events:none}
+@keyframes hologram-sweep{0%{transform:translateX(-100%) rotate(0deg)}100%{transform:translateX(100%) rotate(0deg)}}
+
+/* Notification toast */
+.toast{position:fixed;top:80px;right:24px;z-index:2000;background:var(--dark);border:1px solid var(--neon-mid);
+  border-radius:var(--radius-sm);padding:12px 20px;font-family:var(--font-mono);font-size:11px;
+  color:var(--neon);letter-spacing:0.5px;transform:translateX(120%);transition:transform .4s cubic-bezier(0.16,1,0.3,1);
+  box-shadow:0 4px 20px rgba(0,255,136,0.1);display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateX(0)}
+.toast iconify-icon{font-size:16px}
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Matrix Rain -->
+<canvas id="matrixCanvas"></canvas>
+
+<!-- Particles -->
+<canvas id="particlesCanvas"></canvas>
+
+<!-- Scanlines -->
+<div class="scanlines"></div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast"><iconify-icon icon="lucide:check-circle"></iconify-icon><span id="toastMsg">Connected</span></div>
+
+<!-- ========== CONTENT ========== -->
+<div class="content-wrapper">
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="#" class="nav-logo">RENVILLE<span>.dex</span></a>
+  <div class="nav-links">
+    <a href="#hero" class="nav-link active" data-section="hero">Home</a>
+    <a href="#cards" class="nav-link" data-section="cards">Portfolio</a>
+    <a href="#analytics" class="nav-link" data-section="analytics">AI Lab</a>
+    <a href="#market" class="nav-link" data-section="market">Market</a>
+    <a href="#contact" class="nav-link" data-section="contact">Contact</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-search">
+      <iconify-icon icon="lucide:search" style="font-size:14px;color:var(--gray)"></iconify-icon>
+      <input type="text" placeholder="Search systems...">
+    </div>
+    <button class="nav-icon-btn" title="Settings"><iconify-icon icon="lucide:settings" style="font-size:16px"></iconify-icon></button>
+    <button class="nav-icon-btn" title="Profile"><iconify-icon icon="lucide:user" style="font-size:16px"></iconify-icon></button>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#hero">Home</a>
+  <a href="#cards">Portfolio</a>
+  <a href="#analytics">AI Lab</a>
+  <a href="#market">Market</a>
+  <a href="#contact">Contact</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-status">
+    <div class="status-dot"></div>
+    <span>Systems Online — All Networks Operational</span>
+  </div>
+  <h1 class="hero-title glitch" data-text="RENVILLEX TERMINAL">RENVILLEX <span class="glow">TERMINAL</span></h1>
+  <p class="hero-sub">AI • Cyber • Trading Systems</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="statTPS">2,847</div>
+      <div class="hero-stat-label">Transactions/sec</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="statUptime">99.97%</div>
+      <div class="hero-stat-label">Uptime</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="statNodes">847</div>
+      <div class="hero-stat-label">Active Nodes</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="statLatency">12ms</div>
+      <div class="hero-stat-label">Latency</div>
+    </div>
+  </div>
+  <div class="hero-buttons">
+    <a href="#cards" class="btn btn-primary"><iconify-icon icon="lucide:terminal"></iconify-icon> Access Terminal</a>
+    <a href="#analytics" class="btn btn-outline"><iconify-icon icon="lucide:brain-circuit"></iconify-icon> Launch AI</a>
+    <a href="#market" class="btn btn-ghost"><iconify-icon icon="lucide:bar-chart-3"></iconify-icon> View Portfolio</a>
+  </div>
+  <div class="terminal-box hologram">
+    <div class="terminal-header">
+      <div class="terminal-dot r"></div>
+      <div class="terminal-dot y"></div>
+      <div class="terminal-dot g"></div>
+      <span class="terminal-title">renvillex@terminal ~ %</span>
+    </div>
+    <div class="terminal-body" id="terminalBody"></div>
+  </div>
+</section>
+
+<!-- ANALYTICS -->
+<section class="section" id="analytics">
+  <div class="section-header reveal">
+    <div class="section-label">// Neural Analytics</div>
+    <h2 class="section-title">AI Performance Metrics</h2>
+    <div class="section-divider"></div>
+  </div>
+  <div class="analytics-grid">
+    <div class="analytics-card reveal reveal-delay-1">
+      <div class="analytics-label">AI Win Rate</div>
+      <div class="analytics-value" id="aiWin">87.3%</div>
+      <div class="analytics-change up">▲ +2.4% this week</div>
+    </div>
+    <div class="analytics-card reveal reveal-delay-2">
+      <div class="analytics-label">Total PnL (24h)</div>
+      <div class="analytics-value" style="color:var(--neon)">+$14,892</div>
+      <div class="analytics-change up">▲ +12.8% vs yesterday</div>
+    </div>
+    <div class="analytics-card reveal reveal-delay-3">
+      <div class="analytics-label">Active Bots</div>
+      <div class="analytics-value" id="activeBots">23</div>
+      <div class="analytics-change up">▲ 3 new deployed</div>
+    </div>
+    <div class="analytics-card reveal reveal-delay-4">
+      <div class="analytics-label">Risk Score</div>
+      <div class="analytics-value" style="color:var(--cyan)">Low</div>
+      <div class="analytics-change down">▼ 0.12 VaR</div>
+    </div>
+  </div>
+</section>
+
+<!-- CARDS -->
+<section class="section" id="cards">
+  <div class="section-header reveal">
+    <div class="section-label">// Systems Portfolio</div>
+    <h2 class="section-title">Trading Infrastructure</h2>
+    <div class="section-divider"></div>
+  </div>
+  <div class="card-grid">
+    <div class="card reveal reveal-delay-1">
+      <div class="card-icon"><iconify-icon icon="lucide:brain-circuit"></iconify-icon></div>
+      <div class="card-title">AI Systems</div>
+      <div class="card-desc">Neural network-powered trading algorithms with deep learning market analysis and predictive modeling.</div>
+      <div class="card-stats">
+        <span class="card-stat">Accuracy: <strong>94.2%</strong></span>
+        <span class="card-badge">Active</span>
+      </div>
+    </div>
+    <div class="card reveal reveal-delay-2">
+      <div class="card-icon"><iconify-icon icon="lucide:bot"></iconify-icon></div>
+      <div class="card-title">Trading Bots</div>
+      <div class="card-desc">Autonomous execution engines running 24/7 across multiple DEX and CEX platforms simultaneously.</div>
+      <div class="card-stats">
+        <span class="card-stat">Running: <strong>23 bots</strong></span>
+        <span class="card-badge">Live</span>
+      </div>
+    </div>
+    <div class="card reveal reveal-delay-3">
+      <div class="card-icon"><iconify-icon icon="lucide:activity"></iconify-icon></div>
+      <div class="card-title">Neural Analytics</div>
+      <div class="card-desc">Real-time pattern recognition and sentiment analysis from on-chain data and social signals.</div>
+      <div class="card-stats">
+        <span class="card-stat">Signals: <strong>1,247</strong></span>
+        <span class="card-badge">Scanning</span>
+      </div>
+    </div>
+    <div class="card reveal reveal-delay-1">
+      <div class="card-icon"><iconify-icon icon="lucide:shield-check"></iconify-icon></div>
+      <div class="card-title">Cyber Security</div>
+      <div class="card-desc">Multi-layer encryption with real-time threat detection and automated incident response protocols.</div>
+      <div class="card-stats">
+        <span class="card-stat">Threats blocked: <strong>12.4K</strong></span>
+        <span class="card-badge">Secured</span>
+      </div>
+    </div>
+    <div class="card reveal reveal-delay-2">
+      <div class="card-icon"><iconify-icon icon="lucide:radar"></iconify-icon></div>
+      <div class="card-title">Market Scanner</div>
+      <div class="card-desc">High-frequency market scanning across 200+ pairs with custom filter and alert systems.</div>
+      <div class="card-stats">
+        <span class="card-stat">Pairs: <strong>248</strong></span>
+        <span class="card-badge">Active</span>
+      </div>
+    </div>
+    <div class="card reveal reveal-delay-3">
+      <div class="card-icon"><iconify-icon icon="lucide:atom"></iconify-icon></div>
+      <div class="card-title">Quantum Signals</div>
+      <div class="card-desc">Next-gen quantum-inspired algorithms for arbitrage detection and cross-chain opportunity finding.</div>
+      <div class="card-stats">
+        <span class="card-stat">Alpha: <strong>3.2x</strong></span>
+        <span class="card-badge red">Beta</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARKET -->
+<section class="section" id="market">
+  <div class="section-header reveal">
+    <div class="section-label">// Live Market Data</div>
+    <h2 class="section-title">Market Overview</h2>
+    <div class="section-divider"></div>
+  </div>
+  <div class="market-panel reveal">
+    <div class="market-header">
+      <span class="market-title">Top Coin</span>
+      <span class="market-live"><span class="dot"></span> LIVE</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="market-table">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Price</th>
+            <th>24h Change</th>
+            <th>Volume</th>
+            <th>Chart</th>
+            <th>Signal</th>
+          </tr>
+        </thead>
+        <tbody id="marketBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section" id="contact">
+  <div class="section-header reveal">
+    <div class="section-label">// Establish Connection</div>
+    <h2 class="section-title">Contact Terminal</h2>
+    <div class="section-divider"></div>
+  </div>
+  <div class="contact-grid">
+    <div class="contact-info reveal reveal-delay-1">
+      <div class="contact-status">
+        <div class="contact-status-dot"></div>
+        <span class="contact-status-text">Available for Projects & Collaboration</span>
+      </div>
+      <h3 class="contact-title">Let's Build<br>Something Elite</h3>
+      <p class="contact-desc">Ready to deploy next-generation trading infrastructure? Connect through any channel below. Response time: <span style="color:var(--neon)">&lt; 2 hours</span></p>
+      <div class="social-grid">
+        <a href="https://wa.me/6285124281240" target="_blank" class="social-btn wa">
+          <iconify-icon icon="lucide:message-circle" style="color:var(--neon)"></iconify-icon>
+          <span>WhatsApp</span>
+        </a>
+        <a href="https://t.me/renvillex" target="_blank" class="social-btn">
+          <iconify-icon icon="lucide:send" style="color:var(--cyan)"></iconify-icon>
+          <span>Telegram</span>
+        </a>
+        <a href="https://discord.gg/renzeve" target="_blank" class="social-btn">
+          <iconify-icon icon="lucide:hash" style="color:#7c6fff"></iconify-icon>
+          <span>Discord</span>
+        </a>
+        <a href="https://github.com/renvillex" target="_blank" class="social-btn">
+          <iconify-icon icon="lucide:github" style="color:var(--white)"></iconify-icon>
+          <span>GitHub</span>
+        </a>
+        <a href="https://instagram.com/renville._" target="_blank" class="social-btn">
+          <iconify-icon icon="lucide:instagram" style="color:#e4405f"></iconify-icon>
+          <span>Instagram</span>
+        </a>
+        <a href="renalzby@gmail.com" class="social-btn">
+          <iconify-icon icon="lucide:mail" style="color:var(--gray-light)"></iconify-icon>
+          <span>Email</span>
+        </a>
+      </div>
+    </div>
+    <div class="contact-form-card reveal reveal-delay-2">
+      <form id="contactForm">
+        <div class="form-group">
+          <label class="form-label">Identifier</label>
+          <input type="text" class="form-input" placeholder="Your name or alias" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Communication Channel</label>
+          <input type="email" class="form-input" placeholder="Email or Telegram handle" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <input type="text" class="form-input" placeholder="Project inquiry, collaboration, etc.">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transmission</label>
+          <textarea class="form-input" placeholder="Describe your project or request..." rows="4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+          <iconify-icon icon="lucide:send"></iconify-icon> Transmit Message
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p class="footer-text">Powered by <span>Renvillex</span> AI &mdash; &copy; 2025</p>
+  <div class="footer-socials">
+    <a href="https://wa.me/6285124281240" target="_blank" class="footer-social" title="WhatsApp"><iconify-icon icon="lucide:message-circle"></iconify-icon></a>
+    <a href="https://t.me/renvillex" target="_blank" class="footer-social" title="Telegram"><iconify-icon icon="lucide:send"></iconify-icon></a>
+    <a href="https://discord.gg/xZVFN4nSPB" target="_blank" class="footer-social" title="Discord"><iconify-icon icon="lucide:hash"></iconify-icon></a>
+    <a href="https://github.com/renvillex" target="_blank" class="footer-social" title="GitHub"><iconify-icon icon="lucide:github"></iconify-icon></a>
+    <a href="https://instagram.com/renville._" target="_blank" class="footer-social" title="Instagram"><iconify-icon icon="lucide:instagram"></iconify-icon></a>
+  </div>
+</footer>
+
+</div><!-- /content-wrapper -->
+
+<!-- AUDIO TOGGLE -->
+<div class="audio-toggle">
+  <button class="audio-btn" id="audioBtn" title="Enable Cyber Sound">
+    <iconify-icon icon="lucide:volume-2" id="audioIcon"></iconify-icon>
+  </button>
+  <span class="audio-label">Cyber Sound</span>
+</div>
+
+<script>
+// ========== CUSTOM CURSOR ==========
+const dot = document.getElementById('cursorDot');
+const ring = document.getElementById('cursorRing');
+let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  dot.style.left = mouseX - 3 + 'px';
+  dot.style.top = mouseY - 3 + 'px';
+});
+
+function animateRing() {
+  ringX += (mouseX - ringX) * 0.15;
+  ringY += (mouseY - ringY) * 0.15;
+  ring.style.left = ringX + 'px';
+  ring.style.top = ringY + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+document.querySelectorAll('a,button,.btn,.card,.social-btn,.nav-icon-btn,.footer-social,.audio-btn').forEach(el => {
+  el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+  el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
+});
+
+// ========== MATRIX RAIN ==========
+const matrixCanvas = document.getElementById('matrixCanvas');
+const mCtx = matrixCanvas.getContext('2d');
+
+function resizeMatrix() {
+  matrixCanvas.width = window.innerWidth;
+  matrixCanvas.height = window.innerHeight;
+}
+resizeMatrix();
+
+const chars = 'RENVILLEX01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ';
+const fontSize = 12;
+let columns = Math.floor(matrixCanvas.width / fontSize);
+let drops = Array(columns).fill(1);
+
+function drawMatrix() {
+  mCtx.fillStyle = 'rgba(5,5,5,0.05)';
+  mCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+  mCtx.fillStyle = '#00ff88';
+  mCtx.font = fontSize + 'px Share Tech Mono';
+  for (let i = 0; i < drops.length; i++) {
+    const text = chars[Math.floor(Math.random() * chars.length)];
+    mCtx.fillText(text, i * fontSize, drops[i] * fontSize);
+    if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  }
+}
+setInterval(drawMatrix, 50);
+
+window.addEventListener('resize', () => {
+  resizeMatrix();
+  columns = Math.floor(matrixCanvas.width / fontSize);
+  drops = Array(columns).fill(1);
+  resizeParticles();
+});
+
+// ========== PARTICLES ==========
+const pCanvas = document.getElementById('particlesCanvas');
+const pCtx = pCanvas.getContext('2d');
+let particles = [];
+
+function resizeParticles() {
+  pCanvas.width = window.innerWidth;
+  pCanvas.height = window.innerHeight;
+}
+resizeParticles();
+
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.x = Math.random() * pCanvas.width;
+    this.y = Math.random() * pCanvas.height;
+    this.size = Math.random() * 1.5 + 0.5;
+    this.speedX = (Math.random() - 0.5) * 0.3;
+    this.speedY = (Math.random() - 0.5) * 0.3;
+    this.opacity = Math.random() * 0.5 + 0.1;
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if (this.x < 0 || this.x > pCanvas.width || this.y < 0 || this.y > pCanvas.height) this.reset();
+  }
+  draw() {
+    pCtx.beginPath();
+    pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    pCtx.fillStyle = `rgba(0,255,136,${this.opacity})`;
+    pCtx.fill();
+  }
+}
+
+for (let i = 0; i < 60; i++) particles.push(new Particle());
+
+function animateParticles() {
+  pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  // Draw connections
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        pCtx.beginPath();
+        pCtx.moveTo(particles[i].x, particles[i].y);
+        pCtx.lineTo(particles[j].x, particles[j].y);
+        pCtx.strokeStyle = `rgba(0,255,136,${0.05 * (1 - dist / 120)})`;
+        pCtx.lineWidth = 0.5;
+        pCtx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ========== TERMINAL TYPING ==========
+const terminalLines = [
+  { text: '> Initializing AI systems...', cls: 'cmd' },
+  { text: '> Loading neural network weights... <span class="val">[OK]</span>', cls: 'cmd' },
+  { text: '> Connecting blockchain nodes... <span class="val">847 nodes found</span>', cls: 'cmd' },
+  { text: '> Market scanner activated... <span class="val">248 pairs</span>', cls: 'cmd' },
+  { text: '> Quantum signal engine... <span class="val">ONLINE</span>', cls: 'cmd' },
+  { text: '> Security protocols... <span class="val">ENFORCED</span>', cls: 'cmd' },
+  { text: '> Trading bots deployed... <span class="val">23 active</span>', cls: 'cmd' },
+  { text: '', cls: '' },
+  { text: '<span class="val">Welcome back, Renvillex.</span>', cls: '' },
+  { text: '<span style="color:var(--gray)">All systems operational. Terminal ready.</span>', cls: '' },
+];
+
+const terminalBody = document.getElementById('terminalBody');
+let lineIndex = 0;
+
+function typeLine() {
+  if (lineIndex >= terminalLines.length) {
+    terminalBody.innerHTML += '<span class="terminal-cursor"></span>';
+    return;
+  }
+  const line = terminalLines[lineIndex];
+  const div = document.createElement('div');
+  div.className = 'line';
+  div.style.animationDelay = '0s';
+  div.innerHTML = line.text;
+  terminalBody.appendChild(div);
+  lineIndex++;
+  setTimeout(typeLine, 400 + Math.random() * 300);
+}
+setTimeout(typeLine, 800);
+
+// ========== MARKET DATA ==========
+const marketData = [
+  { symbol: 'BTC', name: 'Bitcoin', price: 104287.50, change: 3.42, volume: '48.2B', mc: '2.06T', color: '#f7931a', bullish: true, chart: [40,55,45,60,52,70,65,80,75,85,90,88] },
+  { symbol: 'SOL', name: 'Solana', price: 178.34, change: 7.18, volume: '8.7B', mc: '82.4B', color: '#00ffa3', bullish: true, chart: [30,35,50,45,60,55,70,65,80,85,90,95] },
+  { symbol: 'ETH', name: 'Ethereum', price: 2654.20, change: -1.24, volume: '22.1B', mc: '319.5B', color: '#627eea', bullish: false, chart: [70,65,60,55,58,50,45,48,42,40,38,35] },
+  { symbol: 'AVAX', name: 'Avalanche', price: 28.67, change: 12.54, volume: '1.2B', mc: '11.3B', color: '#e84142', bullish: true, chart: [20,25,30,28,40,45,50,55,60,65,70,80] },
+  { symbol: 'DOGE', name: 'Dogecoin', price: 0.1847, change: -3.87, volume: '3.4B', mc: '26.8B', color: '#c3a634', bullish: false, chart: [80,75,70,72,65,60,55,50,48,45,40,38] },
+  { symbol: 'RENV', name: 'Renvillex', price: 14.28, change: 24.67, volume: '890M', mc: '1.4B', color: '#00ff88', bullish: true, chart: [10,15,20,25,35,40,55,60,70,80,90,100] },
+  { symbol: 'ARB', name: 'Arbitrum', price: 0.5234, change: 5.12, volume: '620M', mc: '3.2B', color: '#28a0f0', bullish: true, chart: [35,40,38,45,50,48,55,60,58,65,70,72] },
+  { symbol: 'LINK', name: 'Chainlink', price: 18.92, change: -0.89, volume: '980M', mc: '11.6B', color: '#2a5ada', bullish: false, chart: [60,58,55,57,52,50,48,50,46,44,42,40] },
+];
+
+function renderMarket() {
+  const tbody = document.getElementById('marketBody');
+  tbody.innerHTML = '';
+  marketData.forEach(coin => {
+    const maxH = Math.max(...coin.chart);
+    const bars = coin.chart.map(v => {
+      const h = Math.max(2, (v / maxH) * 28);
+      const c = coin.bullish ? 'var(--neon)' : 'var(--red)';
+      return `<div class="bar" style="height:${h}px;background:${c};opacity:0.6"></div>`;
+    }).join('');
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="coin-name">
+          <div class="coin-icon" style="background:${coin.color}22;color:${coin.color}">${coin.symbol.charAt(0)}</div>
+          <span class="coin-symbol">${coin.symbol}</span>
+          <span class="coin-full">${coin.name}</span>
+        </div>
+      </td>
+      <td style="color:var(--white)">$${coin.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+      <td><span class="coin-change ${coin.bullish ? 'up' : 'down'}">${coin.bullish ? '+' : ''}${coin.change}%</span></td>
+      <td style="color:var(--gray-light)">$${coin.volume}</td>
+      <td><div class="mini-chart">${bars}</div></td>
+      <td><span class="signal-indicator ${coin.bullish ? 'bullish' : 'bearish'}"></span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+renderMarket();
+
+// Simulate price updates
+setInterval(() => {
+  marketData.forEach(coin => {
+    const fluctuation = (Math.random() - 0.48) * coin.price * 0.002;
+    coin.price = Math.max(0.0001, coin.price + fluctuation);
+    coin.change += (Math.random() - 0.5) * 0.1;
+    // Update chart
+    coin.chart.shift();
+    const last = coin.chart[coin.chart.length - 1];
+    coin.chart.push(Math.max(5, Math.min(100, last + (Math.random() - 0.45) * 15)));
+  });
+  renderMarket();
+}, 3000);
+
+// ========== HERO STATS ANIMATION ==========
+function animateValue(el, target, suffix = '') {
+  const isDecimal = String(target).includes('.');
+  let current = 0;
+  const step = target / 40;
+  const interval = setInterval(() => {
+    current += step;
+    if (current >= target) { current = target; clearInterval(interval); }
+    el.textContent = isDecimal ? current.toFixed(2) + suffix : Math.floor(current).toLocaleString() + suffix;
+  }, 30);
+}
+
+let statsAnimated = false;
+const heroObserver = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting && !statsAnimated) {
+    statsAnimated = true;
+    animateValue(document.getElementById('statTPS'), 2847);
+    animateValue(document.getElementById('statNodes'), 847);
+  }
+}, { threshold: 0.5 });
+heroObserver.observe(document.querySelector('.hero-stats'));
+
+// ========== SCROLL REVEAL ==========
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ========== ACTIVE NAV LINK ==========
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link[data-section]');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const top = section.offsetTop - 100;
+    if (scrollY >= top) current = section.getAttribute('id');
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.dataset.section === current) link.classList.add('active');
+  });
+
+  // Navbar background on scroll
+  const nav = document.getElementById('navbar');
+  if (scrollY > 50) {
+    nav.style.background = 'rgba(5,5,5,0.95)';
+    nav.style.borderBottomColor = 'rgba(0,255,136,0.08)';
+  } else {
+    nav.style.background = 'rgba(5,5,5,0.8)';
+    nav.style.borderBottomColor = 'rgba(0,255,136,0.1)';
+  }
+});
+
+// ========== HAMBURGER MENU ==========
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
+
+hamburger.addEventListener('click', () => {
+  hamburger.classList.toggle('open');
+  mobileMenu.classList.toggle('open');
+});
+
+mobileMenu.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    hamburger.classList.remove('open');
+    mobileMenu.classList.remove('open');
+  });
+});
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ========== CONTACT FORM ==========
+document.getElementById('contactForm').addEventListener('submit', e => {
+  e.preventDefault();
+  showToast('Message transmitted successfully');
+  e.target.reset();
+});
+
+// ========== AUDIO (Web Audio API ambient) ==========
+let audioCtx = null;
+let audioPlaying = false;
+let audioNodes = [];
+
+function createAmbientSound() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // Deep drone
+  const osc1 = audioCtx.createOscillator();
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(55, audioCtx.currentTime);
+  const gain1 = audioCtx.createGain();
+  gain1.gain.setValueAtTime(0.04, audioCtx.currentTime);
+  osc1.connect(gain1).connect(audioCtx.destination);
+  osc1.start();
+  audioNodes.push(osc1, gain1);
+
+  // Higher harmonic
+  const osc2 = audioCtx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(110, audioCtx.currentTime);
+  const gain2 = audioCtx.createGain();
+  gain2.gain.setValueAtTime(0.015, audioCtx.currentTime);
+  osc2.connect(gain2).connect(audioCtx.destination);
+  osc2.start();
+  audioNodes.push(osc2, gain2);
+
+  // Subtle LFO modulation
+  const lfo = audioCtx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.setValueAtTime(0.2, audioCtx.currentTime);
+  const lfoGain = audioCtx.createGain();
+  lfoGain.gain.setValueAtTime(8, audioCtx.currentTime);
+  lfo.connect(lfoGain).connect(osc1.frequency);
+  lfo.start();
+  audioNodes.push(lfo, lfoGain);
+
+  // Noise layer (filtered)
+  const bufferSize = audioCtx.sampleRate * 2;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const output = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  noise.loop = true;
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = 'lowpass';
+  noiseFilter.frequency.setValueAtTime(200, audioCtx.currentTime);
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.012, audioCtx.currentTime);
+  noise.connect(noiseFilter).connect(noiseGain).connect(audioCtx.destination);
+  noise.start();
+  audioNodes.push(noise, noiseFilter, noiseGain);
+}
+
+document.getElementById('audioBtn').addEventListener('click', function() {
+  if (!audioPlaying) {
+    if (!audioCtx) createAmbientSound();
+    else audioCtx.resume();
+    this.classList.add('active');
+    document.getElementById('audioIcon').setAttribute('icon', 'lucide:volume-2');
+    showToast('Cyber Sound Enabled');
+  } else {
+    audioCtx.suspend();
+    this.classList.remove('active');
+    document.getElementById('audioIcon').setAttribute('icon', 'lucide:volume-x');
+    showToast('Cyber Sound Disabled');
+  }
+  audioPlaying = !audioPlaying;
+});
+
+// ========== LIVE STAT UPDATES ==========
+setInterval(() => {
+  const tps = 2800 + Math.floor(Math.random() * 100);
+  document.getElementById('statTPS').textContent = tps.toLocaleString();
+  const nodes = 845 + Math.floor(Math.random() * 5);
+  document.getElementById('statNodes').textContent = nodes;
+  const lat = 10 + Math.floor(Math.random() * 5);
+  document.getElementById('statLatency').textContent = lat + 'ms';
+  const bots = 22 + Math.floor(Math.random() * 3);
+  document.getElementById('activeBots').textContent = bots;
+  const win = (86 + Math.random() * 3).toFixed(1);
+  document.getElementById('aiWin').textContent = win + '%';
+}, 4000);
+</script>
+</body>
+</html>
